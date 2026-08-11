@@ -1,7 +1,8 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { Fingerprint, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { firebaseAuth } from "@/integrations/firebase/client";
+import { signOut } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 
 const links = [
@@ -13,11 +14,11 @@ const links = [
 
 
 export function SiteHeader() {
-  const { session } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
 
-  async function signOut() {
-    await supabase.auth.signOut();
+  async function signOutUser() {
+    await signOut(firebaseAuth);
     router.navigate({ to: "/", replace: true });
   }
 
@@ -41,7 +42,7 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          {session ? (
+          {user ? (
             <>
               <Link
                 to="/dashboard"
@@ -50,7 +51,7 @@ export function SiteHeader() {
               >
                 Dashboard
               </Link>
-              <Button variant="ghost" size="sm" onClick={signOut} aria-label="Sign out">
+              <Button variant="ghost" size="sm" onClick={signOutUser} aria-label="Sign out">
                 <LogOut className="h-4 w-4" />
               </Button>
             </>

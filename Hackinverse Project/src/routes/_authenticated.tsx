@@ -9,17 +9,17 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthenticatedLayout() {
-  const { session, loading } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const href = useRouterState({ select: (s) => s.location.href });
 
   useEffect(() => {
-    if (!loading && !session) {
+    if (!loading && !user) {
       navigate({ to: "/auth", search: { redirect: href }, replace: true });
     }
-  }, [loading, session, navigate, href]);
+  }, [loading, user, navigate, href]);
 
-  if (loading || !session) {
+  if (loading || !user) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <Loader2 className="h-5 w-5 animate-spin text-primary" aria-label="Loading" />

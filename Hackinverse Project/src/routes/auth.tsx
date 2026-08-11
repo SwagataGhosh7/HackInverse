@@ -1,9 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState, type FormEvent } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Fingerprint } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  updateProfile,
+} from "firebase/auth";
+import { firebaseAuth } from "@/integrations/firebase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,45 +49,24 @@ function AuthPage() {
 
   const target = search.redirect?.startsWith("/") ? search.redirect : "/dashboard";
 
-  useEffect(() => {
-    const handleAuthCallback = async () => {
-      try {
-        await supabase.auth.getSessionFromUrl({ storeSession: true });
-      } catch {
-        // ignore if there is no OAuth callback in the URL
-      }
-      const { data } = await supabase.auth.getSession();
-      if (data.session) navigate({ to: target, replace: true });
-    };
-    handleAuthCallback();
-  }, [navigate, target]);
 
-  async function submit(event: React.FormEvent) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setNotice(null);
     try {
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: { display_name: displayName || email.split("@")[0] },
-          },
-        });
-        if (error) throw error;
-        if (!data.session) {
-          setNotice("Check your inbox and confirm your email to activate the account.");
-          return;
+        const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+        if (displayName.trim()) {
+          await updateProfile(userCredential.user, { displayName });
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        await signInWithEmailAndPassword(firebaseAuth, email, password);
       }
       navigate({ to: target, replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Authentication failed.");
+      const message = err instanceof Error ? err.message : "Authentication failed.";
+      toast.error(message);
     } finally {
       setBusy(false);
     }
@@ -89,22 +75,12 @@ function AuthPage() {
   async function google() {
     setBusy(true);
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth`,
-        },
-      });
-      if (error) {
-        throw error;
-      }
-      if (data?.url) {
-        window.location.assign(data.url);
-        return;
-      }
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(firebaseAuth, provider);
       navigate({ to: target, replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Google sign-in failed.");
+      const message = err instanceof Error ? err.message : "Google sign-in failed.";
+      toast.error(message);
     } finally {
       setBusy(false);
     }
