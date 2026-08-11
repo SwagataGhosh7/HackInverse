@@ -4,7 +4,6 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Fingerprint } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,9 +43,16 @@ function AuthPage() {
   const target = search.redirect?.startsWith("/") ? search.redirect : "/dashboard";
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    const handleAuthCallback = async () => {
+      try {
+        await supabase.auth.getSessionFromUrl({ storeSession: true });
+      } catch {
+        // ignore if there is no OAuth callback in the URL
+      }
+      const { data } = await supabase.auth.getSession();
       if (data.session) navigate({ to: target, replace: true });
-    });
+    };
+    handleAuthCallback();
   }, [navigate, target]);
 
   async function submit(event: React.FormEvent) {
@@ -81,15 +87,27 @@ function AuthPage() {
   }
 
   async function google() {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      toast.error(result.error.message ?? "Google sign-in failed.");
-      return;
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth`,
+        },
+      });
+      if (error) {
+        throw error;
+      }
+      if (data?.url) {
+        window.location.assign(data.url);
+        return;
+      }
+      navigate({ to: target, replace: true });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Google sign-in failed.");
+    } finally {
+      setBusy(false);
     }
-    if (result.redirected) return;
-    navigate({ to: target, replace: true });
   }
 
   return (
