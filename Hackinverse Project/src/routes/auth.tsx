@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Fingerprint } from "lucide-react";
@@ -10,12 +10,10 @@ import {
   signInWithPopup,
   updateProfile,
 } from "firebase/auth";
-import { firebaseAuth } from "@/integrations/firebase/client";
+import { getFirebaseAuth, isFirebaseReady } from "@/integrations/firebase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const authDisabled = !firebaseAuth;
 
 const searchSchema = z.object({ redirect: z.string().optional() });
 
@@ -40,6 +38,13 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setReady(isFirebaseReady());
+  }, []);
+
+  const authDisabled = !ready;
   const navigate = useNavigate();
   const search = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -51,24 +56,24 @@ function AuthPage() {
 
   const target = search.redirect?.startsWith("/") ? search.redirect : "/dashboard";
 
-
   async function submit(event: FormEvent<HTMLFormElement>) {
-    if (authDisabled || !firebaseAuth) {
+    event.preventDefault();
+    const auth = getFirebaseAuth();
+    if (authDisabled || !auth) {
       toast.error("Firebase auth is not configured. Set VITE_FIREBASE_* env vars.");
       return;
     }
 
-    event.preventDefault();
     setBusy(true);
     setNotice(null);
     try {
       if (mode === "signup") {
-        const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         if (displayName.trim()) {
           await updateProfile(userCredential.user, { displayName });
         }
       } else {
-        await signInWithEmailAndPassword(firebaseAuth, email, password);
+        await signInWithEmailAndPassword(auth, email, password);
       }
       navigate({ to: target, replace: true });
     } catch (err) {
@@ -80,7 +85,8 @@ function AuthPage() {
   }
 
   async function google() {
-    if (authDisabled || !firebaseAuth) {
+    const auth = getFirebaseAuth();
+    if (authDisabled || !auth) {
       toast.error("Firebase auth is not configured. Set VITE_FIREBASE_* env vars.");
       return;
     }
@@ -88,7 +94,7 @@ function AuthPage() {
     setBusy(true);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(firebaseAuth, provider);
+      await signInWithPopup(auth, provider);
       navigate({ to: target, replace: true });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Google sign-in failed.";
