@@ -4,6 +4,10 @@ import { firebaseAuth } from "@/integrations/firebase/client";
 
 export const attachFirebaseAuth = createMiddleware({ type: "function" }).client(
   async ({ next }) => {
+    if (!firebaseAuth) {
+      return next({});
+    }
+
     return new Promise((resolve, reject) => {
       const unsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
         unsubscribe();

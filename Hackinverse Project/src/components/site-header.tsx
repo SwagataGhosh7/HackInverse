@@ -18,6 +18,7 @@ export function SiteHeader() {
   const router = useRouter();
 
   async function signOutUser() {
+    if (!firebaseAuth) return;
     await signOut(firebaseAuth);
     router.navigate({ to: "/", replace: true });
   }

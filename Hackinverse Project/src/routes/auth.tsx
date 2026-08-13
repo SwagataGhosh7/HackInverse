@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+const authDisabled = !firebaseAuth;
+
 const searchSchema = z.object({ redirect: z.string().optional() });
 
 export const Route = createFileRoute("/auth")({
@@ -51,6 +53,11 @@ function AuthPage() {
 
 
   async function submit(event: FormEvent<HTMLFormElement>) {
+    if (authDisabled || !firebaseAuth) {
+      toast.error("Firebase auth is not configured. Set VITE_FIREBASE_* env vars.");
+      return;
+    }
+
     event.preventDefault();
     setBusy(true);
     setNotice(null);
@@ -73,6 +80,11 @@ function AuthPage() {
   }
 
   async function google() {
+    if (authDisabled || !firebaseAuth) {
+      toast.error("Firebase auth is not configured. Set VITE_FIREBASE_* env vars.");
+      return;
+    }
+
     setBusy(true);
     try {
       const provider = new GoogleAuthProvider();
@@ -98,6 +110,12 @@ function AuthPage() {
         <p className="mt-2 text-xs text-muted-foreground">
           Verification is open to everyone. An account is only required to register and sign media.
         </p>
+
+        {authDisabled && (
+          <p className="mt-4 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+            Firebase auth is not configured yet. Add the VITE_FIREBASE_* values in your .env file.
+          </p>
+        )}
 
         <form onSubmit={submit} className="mt-6 space-y-4">
           {mode === "signup" && (
@@ -141,7 +159,7 @@ function AuthPage() {
             />
           </div>
           {notice && <p className="text-xs text-primary">{notice}</p>}
-          <Button type="submit" className="w-full" disabled={busy}>
+          <Button type="submit" className="w-full" disabled={busy || authDisabled}>
             {mode === "signin" ? "Sign in" : "Create account"}
           </Button>
         </form>
@@ -152,7 +170,7 @@ function AuthPage() {
           <span className="h-px flex-1 bg-border" />
         </div>
 
-        <Button variant="outline" className="w-full" onClick={google}>
+        <Button variant="outline" className="w-full" onClick={google} disabled={authDisabled}>
           Continue with Google
         </Button>
 

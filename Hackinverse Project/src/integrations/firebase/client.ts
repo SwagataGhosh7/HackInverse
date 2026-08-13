@@ -10,18 +10,20 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-if (
-  !firebaseConfig.apiKey ||
-  !firebaseConfig.authDomain ||
-  !firebaseConfig.projectId ||
-  !firebaseConfig.storageBucket ||
-  !firebaseConfig.messagingSenderId ||
-  !firebaseConfig.appId
-) {
-  throw new Error(
-    "Missing Firebase configuration. Please set VITE_FIREBASE_* env vars.",
+const isFirebaseConfigured = Boolean(
+  firebaseConfig.apiKey &&
+    firebaseConfig.authDomain &&
+    firebaseConfig.projectId &&
+    firebaseConfig.storageBucket &&
+    firebaseConfig.messagingSenderId &&
+    firebaseConfig.appId,
+);
+
+if (!isFirebaseConfigured) {
+  console.warn(
+    "Firebase auth is not configured. Set VITE_FIREBASE_* env vars to enable sign-in.",
   );
 }
 
-const app = initializeApp(firebaseConfig);
-export const firebaseAuth = getAuth(app);
+export const firebaseAuth = isFirebaseConfigured ? getAuth(initializeApp(firebaseConfig)) : null;
+export const isFirebaseReady = () => Boolean(firebaseAuth);
