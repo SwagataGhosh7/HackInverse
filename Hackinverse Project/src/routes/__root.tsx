@@ -12,6 +12,11 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { SiteHeader } from "../components/site-header";
 import { Toaster } from "../components/ui/sonner";
+import { ChatWidget } from "../components/chat-widget";
+import { initTheme } from "../hooks/useTheme";
+
+// Apply saved theme before React renders to prevent flash
+if (typeof window !== "undefined") initTheme();
 
 function NotFoundComponent() {
   return (
@@ -130,6 +135,7 @@ function RootComponent() {
         </footer>
       </div>
       <Toaster position="top-right" />
+      <ChatWidget />
     </QueryClientProvider>
   );
 }

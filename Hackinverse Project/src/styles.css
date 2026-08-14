@@ -60,7 +60,9 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-:root {
+/* ── Dark theme (default) ── */
+:root,
+.dark {
   --radius: 0.25rem;
 
   --background: oklch(0.145 0.008 255);
@@ -116,8 +118,59 @@
   --sidebar-ring: oklch(0.87 0.222 152);
 }
 
-.dark {
-  color-scheme: dark;
+/* ── Light theme ── */
+.light {
+  --radius: 0.25rem;
+
+  --background: oklch(0.98 0.004 255);
+  --foreground: oklch(0.18 0.012 255);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.012 255);
+  --panel: oklch(0.95 0.006 255);
+  --panel-foreground: oklch(0.18 0.012 255);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.012 255);
+
+  /* acid green — keeps brand consistent */
+  --primary: oklch(0.55 0.2 152);
+  --primary-foreground: oklch(0.99 0.005 152);
+
+  --secondary: oklch(0.92 0.008 255);
+  --secondary-foreground: oklch(0.18 0.012 255);
+
+  --muted: oklch(0.93 0.006 255);
+  --muted-foreground: oklch(0.5 0.016 255);
+
+  --accent: oklch(0.9 0.01 255);
+  --accent-foreground: oklch(0.18 0.012 255);
+
+  --destructive: oklch(0.58 0.22 19);
+  --destructive-foreground: oklch(0.99 0.005 19);
+
+  --warning: oklch(0.72 0.16 82);
+  --warning-foreground: oklch(0.18 0.04 82);
+
+  --border: oklch(0.86 0.008 255);
+  --input: oklch(0.86 0.008 255);
+  --ring: oklch(0.55 0.2 152);
+  --grid-line: oklch(0.9 0.006 255);
+
+  --chart-1: oklch(0.55 0.2 152);
+  --chart-2: oklch(0.58 0.22 19);
+  --chart-3: oklch(0.72 0.16 82);
+  --chart-4: oklch(0.55 0.12 220);
+  --chart-5: oklch(0.5 0.016 255);
+
+  --sidebar: oklch(0.96 0.005 255);
+  --sidebar-foreground: oklch(0.18 0.012 255);
+  --sidebar-primary: oklch(0.55 0.2 152);
+  --sidebar-primary-foreground: oklch(0.99 0.005 152);
+  --sidebar-accent: oklch(0.92 0.008 255);
+  --sidebar-accent-foreground: oklch(0.18 0.012 255);
+  --sidebar-border: oklch(0.86 0.008 255);
+  --sidebar-ring: oklch(0.55 0.2 152);
 }
 
 @layer base {
@@ -129,11 +182,16 @@
     color-scheme: dark;
   }
 
+  html.light {
+    color-scheme: light;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   h1,
@@ -143,6 +201,7 @@
     letter-spacing: -0.02em;
   }
 }
+
 
 @utility grid-field {
   background-image:
