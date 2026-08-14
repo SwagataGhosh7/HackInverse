@@ -19,6 +19,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          face_descriptor: string | null
           id: string
           updated_at: string
         }
@@ -26,6 +27,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          face_descriptor?: string | null
           id: string
           updated_at?: string
         }
@@ -33,6 +35,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          face_descriptor?: string | null
           id?: string
           updated_at?: string
         }
@@ -46,6 +49,7 @@ export type Database = {
           chain_id: number
           created_at: string
           description: string | null
+          face_match_score: number | null
           file_name: string | null
           file_size: number | null
           id: string
@@ -69,6 +73,7 @@ export type Database = {
           chain_id?: number
           created_at?: string
           description?: string | null
+          face_match_score?: number | null
           file_name?: string | null
           file_size?: number | null
           id?: string
@@ -92,6 +97,7 @@ export type Database = {
           chain_id?: number
           created_at?: string
           description?: string | null
+          face_match_score?: number | null
           file_name?: string | null
           file_size?: number | null
           id?: string

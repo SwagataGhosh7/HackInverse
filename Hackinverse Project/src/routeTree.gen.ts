@@ -16,6 +16,7 @@ import { Route as BulkRouteImport } from './routes/bulk'
 import { Route as ExplorerRouteImport } from './routes/explorer'
 import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
 import { Route as AuthenticatedRegisterRouteImport } from './routes/_authenticated.register'
 import { Route as RecordHashRouteImport } from './routes/record.$hash'
 
@@ -53,6 +54,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedRegisterRoute = AuthenticatedRegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/explorer': typeof ExplorerRoute
   '/verify': typeof VerifyRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/register': typeof AuthenticatedRegisterRoute
   '/record/$hash': typeof RecordHashRoute
 }
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/explorer': typeof ExplorerRoute
   '/verify': typeof VerifyRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/register': typeof AuthenticatedRegisterRoute
   '/record/$hash': typeof RecordHashRoute
 }
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/explorer': typeof ExplorerRoute
   '/verify': typeof VerifyRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/register': typeof AuthenticatedRegisterRoute
   '/record/$hash': typeof RecordHashRoute
 }
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/explorer'
     | '/verify'
     | '/dashboard'
+    | '/profile'
     | '/register'
     | '/record/$hash'
   fileRoutesByTo: FileRoutesByTo
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
     | '/explorer'
     | '/verify'
     | '/dashboard'
+    | '/profile'
     | '/register'
     | '/record/$hash'
   id:
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '/explorer'
     | '/verify'
     | '/_authenticated/dashboard'
+    | '/_authenticated/profile'
     | '/_authenticated/register'
     | '/record/$hash'
   fileRoutesById: FileRoutesById
@@ -191,6 +203,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/register': {
       id: '/_authenticated/register'
       path: '/register'
@@ -210,11 +229,13 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRegisterRoute: typeof AuthenticatedRegisterRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRegisterRoute: AuthenticatedRegisterRoute,
 }
 

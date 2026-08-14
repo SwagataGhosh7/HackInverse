@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Camera, Loader2, User, Wallet, FileCheck } from "lucide-react";
+import { Camera, Loader2, User, Wallet, FileCheck, ShieldCheck } from "lucide-react";
 import { updateProfile } from "firebase/auth";
 import { useAuth } from "@/hooks/useAuth";
 import { getFirebaseAuth } from "@/integrations/firebase/client";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EvidencePanel, EvidenceRow } from "@/components/evidence";
+import { FaceVerify } from "@/components/face-verify";
 import { truncateHash } from "@/lib/media";
 import { EXPLORER } from "@/lib/chain";
 
@@ -34,6 +35,8 @@ function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.photoURL ?? null);
   const [savingName, setSavingName] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [faceDescriptor, setFaceDescriptor] = useState<string | null>(null);
+  const [faceVerified, setFaceVerified] = useState(false);
 
   // Stats from Supabase
   const [registrationCount, setRegistrationCount] = useState<number | null>(null);
@@ -45,12 +48,16 @@ function ProfilePage() {
     // Fetch profile from Supabase
     supabase
       .from("profiles")
-      .select("display_name, avatar_url")
+      .select("display_name, avatar_url, face_descriptor")
       .eq("id", user.uid)
       .maybeSingle()
       .then(({ data }) => {
         if (data?.display_name) setDisplayName(data.display_name);
         if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+        if (data?.face_descriptor) {
+          setFaceDescriptor(data.face_descriptor);
+          setFaceVerified(true);
+        }
       });
 
     // Fetch registration count
@@ -121,6 +128,27 @@ function ProfilePage() {
       toast.error(err instanceof Error ? err.message : "Upload failed.");
     } finally {
       setUploadingAvatar(false);
+    }
+  }
+
+  async function handleFaceVerified(result: { snapshot: string; descriptor: string; matchScore: number | null }) {
+    if (!user) return;
+    try {
+      await supabase
+        .from("profiles")
+        .upsert({ 
+          id: user.uid, 
+          face_descriptor: result.descriptor,
+          updated_at: new Date().toISOString() 
+        });
+      
+      setFaceDescriptor(result.descriptor);
+      setFaceVerified(true);
+      toast.success(result.matchScore !== null 
+        ? `Face verified successfully (${result.matchScore}% match)` 
+        : "Face biometric registered successfully");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Face verification failed.");
     }
   }
 
@@ -219,6 +247,29 @@ function ProfilePage() {
             {/* Account info */}
             <EvidenceRow label="Email" value={user?.email ?? "—"} mono={false} />
             <EvidenceRow label="UID" value={user?.uid ?? "—"} />
+          </div>
+        </EvidencePanel>
+
+        {/* Face verification */}
+        <EvidencePanel title="Biometric verification">
+          <div className="space-y-4 py-4">
+            {faceVerified ? (
+              <div className="flex items-center gap-3 rounded-lg border border-success/30 bg-success/5 p-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/15">
+                  <ShieldCheck className="h-5 w-5 text-success" />
+                </div>
+                <div>
+                  <p className="font-medium text-success">Face biometric registered</p>
+                  <p className="text-xs text-muted-foreground">Your face descriptor is stored for verification during media registration.</p>
+                </div>
+              </div>
+            ) : (
+              <FaceVerify 
+                referenceDescriptor={null}
+                onVerified={handleFaceVerified}
+                onSkip={() => toast.info("Face verification skipped. You can enable it later.")}
+              />
+            )}
           </div>
         </EvidencePanel>
 

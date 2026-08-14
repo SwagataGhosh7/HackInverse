@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Check, Loader2, Wallet } from "lucide-react";
@@ -7,6 +7,7 @@ import type { Hex } from "viem";
 import { MediaDropzone } from "@/components/media-dropzone";
 import { EvidencePanel, EvidenceRow } from "@/components/evidence";
 import { AiVerdict } from "@/components/ai-verdict";
+import { FaceVerify } from "@/components/face-verify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/register")({
   component: RegisterPage,
 });
 
-type Step = "file" | "declare" | "sign" | "done";
+type Step = "file" | "declare" | "face" | "sign" | "done";
 
 function RegisterPage() {
   const { user } = useAuth();
@@ -69,6 +70,24 @@ function RegisterPage() {
 
   const [txHash, setTxHash] = useState<string | null>(null);
   const [signature, setSignature] = useState<string | null>(null);
+  const [faceDescriptor, setFaceDescriptor] = useState<string | null>(null);
+  const [faceMatchScore, setFaceMatchScore] = useState<number | null>(null);
+  const [skipFaceVerify, setSkipFaceVerify] = useState(false);
+
+  // Fetch user's face descriptor on mount
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("face_descriptor")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.face_descriptor) {
+          setFaceDescriptor(data.face_descriptor);
+        }
+      });
+  }, [user]);
 
   async function onFile(next: File) {
     setBusy(true);
@@ -105,6 +124,21 @@ function RegisterPage() {
     } finally {
       setAnalyzing(false);
     }
+  }
+
+  function handleFaceVerified(result: { snapshot: string; descriptor: string; matchScore: number | null }) {
+    setFaceMatchScore(result.matchScore);
+    if (result.matchScore === null) {
+      // First time registration - store the descriptor
+      toast.info("Face biometric registered for future verification");
+    } else if (result.matchScore >= 50) {
+      // Good match
+      toast.success(`Face verified successfully (${result.matchScore}% match)`);
+    } else {
+      // Poor match but proceed
+      toast.warning(`Face match score is low (${result.matchScore}%), but proceeding with registration`);
+    }
+    setStep("sign");
   }
 
   async function signAndRegister() {
@@ -154,6 +188,7 @@ function RegisterPage() {
         status: tx ? "confirmed" : "pending",
         ai_score: analysis && analysis.score >= 0 ? analysis.score : null,
         ai_summary: analysis?.verdict ?? null,
+        face_match_score: faceMatchScore,
       });
       if (error) throw error;
 
@@ -182,17 +217,21 @@ function RegisterPage() {
       </header>
 
       <ol className="mb-8 flex flex-wrap gap-2">
-        {(["file", "declare", "sign", "done"] as Step[]).map((s, i) => (
-          <li
-            key={s}
-            className={cn(
-              "rounded border border-border px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.14em]",
-              step === s ? "border-primary text-primary" : "text-muted-foreground",
-            )}
-          >
-            {i + 1}. {s}
-          </li>
-        ))}
+        {(["file", "declare", "face", "sign", "done"] as Step[]).map((s, i) => {
+          // Skip face step if user has no face descriptor or already skipped
+          if (s === "face" && (!faceDescriptor || skipFaceVerify)) return null;
+          return (
+            <li
+              key={s}
+              className={cn(
+                "rounded border border-border px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.14em]",
+                step === s ? "border-primary text-primary" : "text-muted-foreground",
+              )}
+            >
+              {i + 1}. {s}
+            </li>
+          );
+        })}
       </ol>
 
       {step === "file" && (
@@ -289,8 +328,56 @@ function RegisterPage() {
               />
 
               <div className="flex justify-end">
-                <Button onClick={() => setStep("sign")} disabled={!title.trim()}>
-                  Continue to signing
+                <Button 
+                  onClick={() => {
+                    if (faceDescriptor && !skipFaceVerify) {
+                      setStep("face");
+                    } else {
+                      setStep("sign");
+                    }
+                  }} 
+                  disabled={!title.trim()}
+                >
+                  Continue
+                </Button>
+              </div>
+            </>
+          )}
+
+          {step === "face" && (
+            <>
+              <EvidencePanel title="Biometric verification">
+                <div className="space-y-4 py-4">
+                  <p className="text-xs text-muted-foreground">
+                    Verify your identity to attach biometric proof-of-presence to this registration.
+                    This helps establish stronger provenance by linking the media to your verified identity.
+                  </p>
+                  <FaceVerify
+                    referenceDescriptor={faceDescriptor}
+                    onVerified={handleFaceVerified}
+                    onSkip={() => {
+                      setSkipFaceVerify(true);
+                      setStep("sign");
+                    }}
+                  />
+                  {faceMatchScore !== null && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-muted-foreground">Match score:</span>
+                      <span className={cn(
+                        "font-medium",
+                        faceMatchScore >= 70 ? "text-success" : 
+                        faceMatchScore >= 50 ? "text-warning" : "text-destructive"
+                      )}>
+                        {faceMatchScore}%
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </EvidencePanel>
+
+              <div className="flex justify-end">
+                <Button variant="ghost" onClick={() => setStep("declare")}>
+                  Back
                 </Button>
               </div>
             </>
