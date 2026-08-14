@@ -1,0 +1,11 @@
+# Cloudflare Pages/Workers configuration
+name = "verimedia-chain"
+compatibility_date = "2024-01-01"
+
+[env.production]
+vars = { 
+  ENVIRONMENT = "production"
+}
+
+# For Cloudflare Pages, use _headers and _redirects files instead
+# This file is mainly for Workers deployment if needed

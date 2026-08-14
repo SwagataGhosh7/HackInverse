@@ -15,9 +15,6 @@ import { Toaster } from "../components/ui/sonner";
 import { ChatWidget } from "../components/chat-widget";
 import { initTheme } from "../hooks/useTheme";
 
-// Apply saved theme before React renders to prevent flash
-if (typeof window !== "undefined") initTheme();
-
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -106,6 +103,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  // Apply theme on client-side only to avoid hydration mismatch
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      initTheme();
+    }
+  }, []);
+
   return (
     <html lang="en">
       <head>

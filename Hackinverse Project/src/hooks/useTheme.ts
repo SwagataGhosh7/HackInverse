@@ -10,21 +10,27 @@ function applyTheme(theme: Theme) {
 }
 
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window === "undefined") return "dark";
-    return (localStorage.getItem("theme") as Theme) ?? "dark";
-  });
+  const [theme, setTheme] = useState<Theme>("dark");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    applyTheme(theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+    setMounted(true);
+    const saved = (localStorage.getItem("theme") as Theme) ?? "dark";
+    setTheme(saved);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      applyTheme(theme);
+      localStorage.setItem("theme", theme);
+    }
+  }, [theme, mounted]);
 
   function toggle() {
     setTheme((t) => (t === "dark" ? "light" : "dark"));
   }
 
-  return { theme, toggle };
+  return { theme, toggle, mounted };
 }
 
 /** Call once on app boot (before React hydrates) to avoid flash */

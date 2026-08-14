@@ -23,7 +23,7 @@ const links = [
 
 export function SiteHeader() {
   const { user } = useAuth();
-  const { theme, toggle } = useTheme();
+  const { theme, toggle, mounted } = useTheme();
   const router = useRouter();
 
   async function signOutUser() {
@@ -60,14 +60,16 @@ export function SiteHeader() {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           {/* Theme toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggle}
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
+          {mounted && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggle}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+          )}
 
           {user ? (
             <DropdownMenu>
