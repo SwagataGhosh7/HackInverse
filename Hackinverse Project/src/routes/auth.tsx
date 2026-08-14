@@ -4,10 +4,8 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Fingerprint } from "lucide-react";
 import {
-  GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInWithPopup,
   updateProfile,
 } from "firebase/auth";
 import { getFirebaseAuth, isFirebaseReady } from "@/integrations/firebase/client";
@@ -84,25 +82,7 @@ function AuthPage() {
     }
   }
 
-  async function google() {
-    const auth = getFirebaseAuth();
-    if (authDisabled || !auth) {
-      toast.error("Firebase auth is not configured. Set VITE_FIREBASE_* env vars.");
-      return;
-    }
 
-    setBusy(true);
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      navigate({ to: target, replace: true });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Google sign-in failed.";
-      toast.error(message);
-    } finally {
-      setBusy(false);
-    }
-  }
 
   return (
     <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-md flex-col justify-center px-4 py-12">
@@ -170,15 +150,7 @@ function AuthPage() {
           </Button>
         </form>
 
-        <div className="my-5 flex items-center gap-3">
-          <span className="h-px flex-1 bg-border" />
-          <span className="label-mono">or</span>
-          <span className="h-px flex-1 bg-border" />
-        </div>
 
-        <Button variant="outline" className="w-full" onClick={google} disabled={authDisabled}>
-          Continue with Google
-        </Button>
 
         <button
           type="button"
