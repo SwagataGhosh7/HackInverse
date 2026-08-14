@@ -1,0 +1,17 @@
+{
+  "name": "verimedia-chain",
+  "private": true,
+  "scripts": {
+    "dev": "cd \"Hackinverse Project\" && npm run dev",
+    "build": "cd \"Hackinverse Project\" && npm run build",
+    "vercel-build": "cd \"Hackinverse Project\" && npm run build",
+    "pages:build": "cd \"Hackinverse Project\" && npm run build",
+    "preview": "cd \"Hackinverse Project\" && npm run preview",
+    "lint": "cd \"Hackinverse Project\" && npm run lint",
+    "format": "cd \"Hackinverse Project\" && npm run format",
+    "typecheck": "cd \"Hackinverse Project\" && npm run typecheck"
+  },
+  "workspaces": [
+    "Hackinverse Project"
+  ]
+}
