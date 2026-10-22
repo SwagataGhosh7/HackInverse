@@ -15,7 +15,7 @@ export type DeepfakeAnalysis = {
 };
 
 export const analyzeMedia = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => AnalyzeInput.parse(input))
+  .validator((input: unknown) => AnalyzeInput.parse(input))
   .handler(async ({ data }): Promise<DeepfakeAnalysis> => {
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) throw new Error("AI is not configured for this project.");
